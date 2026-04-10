@@ -1,0 +1,19 @@
+meta {
+  name: Create question
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseURL}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "question": "What is the capital of Estonia?",
+    "answer": "Tallin",
+    "keywords": ["capital", "estonia"]
+  }
+}

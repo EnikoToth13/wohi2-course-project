@@ -1,0 +1,19 @@
+meta {
+  name: Edit questions
+  type: http
+  seq: 1
+}
+
+put {
+  url: {{baseURL}}/2
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "question": "What is 1+1?",
+    "answer": "2",
+    "keywords": ["addition", "1"]
+  }
+}
