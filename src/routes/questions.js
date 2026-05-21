@@ -29,7 +29,7 @@ const upload = multer({
         if (file.mimetype.startsWith("image")) {
             cb(null, true);
         } else {
-            cb(new Error("Only image files are allowed"));
+            cb(new ValidationError("Only image files are allowed"));
         }
     },
     limits: {fileSize: 5 * 1024 * 1024}
@@ -196,6 +196,7 @@ router.delete("/:qId", isOwner, async (req, res) => {
         throw new NotFoundError("Question not found");
     }
 
+    await prisma.attempt.deleteMany({ where: { questionId: qId } });
     await prisma.question.delete({ where: { id: qId } });
 
     res.json({

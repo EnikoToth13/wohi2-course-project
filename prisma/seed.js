@@ -30,6 +30,7 @@ const seedQuestions = [
 ];
 
 async function main() {
+  await prisma.attempt.deleteMany();
   await prisma.question.deleteMany();
   await prisma.keyword.deleteMany();
   await prisma.user.deleteMany();

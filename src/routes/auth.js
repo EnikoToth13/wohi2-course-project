@@ -56,7 +56,7 @@ router.post("/login", async(req, res) => {
     const isValid = await bcrypt.compare(password, user.password);
 
     if (!isValid) {
-        throw new ForbiddenError("Invalid credentials");
+        throw new ValidationError("Invalid credentials");
     }
 
     //generate token
