@@ -8,9 +8,9 @@ const transporter = nodemailer.createTransport({
         user: process.env.SMTP_USER,
         password: process.env.SMTP_PASS,
     },
-    connectionTimeout: 5000,
-    greetingTimeout: 5000,
-    socketTimeout: 5000
+    connectionTimeout: 5000, 
+    greetingTimeout: 5000,   
+    timeout: 5000
 });
 
 async function sendConfirmationEmail(userEmail, token) {
