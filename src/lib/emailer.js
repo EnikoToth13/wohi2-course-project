@@ -1,15 +1,16 @@
 const nodemailer = require("nodemailer");
 
 const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT),
-    secure: true,
+    host: mail-eu.smtp2go.com,
+    port: 80,
+    secure: false,
     auth: {
         user: process.env.SMTP_USER,
         password: process.env.SMTP_PASS,
     },
     connectionTimeout: 5000,
     greetingTimeout: 5000,
+    socketTimeout: 5000
 });
 
 async function sendConfirmationEmail(userEmail, token) {
