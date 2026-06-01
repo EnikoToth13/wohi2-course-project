@@ -7,6 +7,8 @@ const multer = require("multer");
 const path = require("path");
 const { NotFoundError, ValidationError } = require('../lib/errors');
 const { z } = require("zod");
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
 const QuestionInput = z.object({
     question: z.string().min(1),
@@ -14,13 +16,18 @@ const QuestionInput = z.object({
     keywords: z.union([z.string(), z.array(z.string())]).optional()
 });
 
-const storage = multer.diskStorage({
-    destination: path.join(__dirname, "..","..","public","uploads"),
-    filename: (req, file, cb) => {
-        const ext = path.extname(file.originalname);
-        const newName = `${Date.now()}-${Math.random().toString(36).slice(2,8)}${ext}`;
-        cb(null, newName)
-    }
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+const storage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: 'quiz_game_uploads', // The folder name that will appear in your Cloudinary account
+        allowed_formats: ['jpg', 'png', 'jpeg'],
+    },
 });
 
 const upload = multer({
@@ -131,7 +138,7 @@ router.post("/", upload.single("image"), async (req, res) => {
     const {question, answer, keywords} = QuestionInput.parse(req.body);
 
     const keywordsArray = parseKeywords(keywords);
-    const imageUrl = req.file ? `/uploads/${req.file.filename}`: null;
+    const imageUrl = req.file ? req.file.path : null;
     const newQuestion = await prisma.question.create({
     data: {
       question, answer, imageUrl,
@@ -164,7 +171,7 @@ router.put("/:qId", isOwner, upload.single("image"), async (req, res) => {
     if (!question || !answer) {
         throw new ValidationError("question and answer are required")
     }
-    const imageUrl = req.file ? `/uploads/${req.file.filename}`: null;
+    const imageUrl = req.file ? req.file.path : questionId.imageUrl;
 
     const keywordsArray = parseKeywords(keywords);
     const updatedQuestion = await prisma.question.update({
