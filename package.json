@@ -15,6 +15,9 @@
     "test:setup": "DATABASE_URL=mysql://root:password@localhost:3306/quiz_test npx prisma migrate deploy",
     "test:coverage": "vitest run --coverage"
   },
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "prisma": {
     "seed": "node prisma/seed.js"
   },

@@ -53,63 +53,71 @@ router.post("/register", async(req, res) => {
 })
 
 //POST /api/auth/login
-router.post("/login", async(req, res) => {
-    const { email, password } = req.body;
-    if (!email || !password) {
-        throw new ValidationError("email and password are required");
-    }
+router.post("/login", async(req, res, next) => {
+    try {
+        const { email, password } = req.body;
+        if (!email || !password) {
+            throw new ValidationError("email and password are required");
+        }
 
-    //find user
-    const user = await prisma.user.findUnique({
-        where: {email}
-    });
-
-    if (!user) {
-        throw new UnauthorizedError("Invalid credentials");
-    }
-
-    const isValid = await bcrypt.compare(password, user.password);
-
-    if (!isValid) {
-        throw new ValidationError("Invalid credentials");
-    }
-
-    if (!user.isConfirmed) {
-        return res.status(403).json({ 
-            message: "Your email address has not been confirmed yet. Please check your inbox." 
+        //find user
+        const user = await prisma.user.findUnique({
+            where: {email}
         });
+
+        if (!user) {
+            throw new UnauthorizedError("Invalid credentials");
+        }
+
+        const isValid = await bcrypt.compare(password, user.password);
+
+        if (!isValid) {
+            throw new ValidationError("Invalid credentials");
+        }
+
+        if (!user.isConfirmed) {
+            return res.status(403).json({ 
+                message: "Your email address has not been confirmed yet. Please check your inbox." 
+            });
+        }
+
+        //generate token
+        const token = jwt.sign({userId: user.id}, SECRET, {expiresIn: "1h"});
+
+        res.json({ token });
+    } catch (error) {
+        next(error);
     }
-
-    //generate token
-    const token = jwt.sign({userId: user.id}, SECRET, {expiresIn: "1h"});
-
-    res.json({ token });
 });
 
 router.get("/confirm", async (req, res) => {
-    const { token } = req.query;
+    try {
+        const { token } = req.query;
 
-    if (!token) {
-        return res.status(400).send("<h1>Invalid or missing token.</h1>");
-    }
-
-    const user = await prisma.user.findUnique({
-        where: { confirmationToken: token }
-    });
-
-    if (!user) {
-        return res.status(400).send("<h1>Link expired or invalid token.</h1>");
-    }
-
-    await prisma.user.update({
-        where: { id: user.id },
-        data: {
-            isConfirmed: true,
-            confirmationToken: null
+        if (!token) {
+            return res.status(400).send("<h1>Invalid or missing token.</h1>");
         }
-    });
 
-    res.redirect("https://wohi2-course-project-production-bbfa.up.railway.app/login?confirmed=true");
+        const user = await prisma.user.findUnique({
+            where: { confirmationToken: token }
+        });
+
+        if (!user) {
+            return res.status(400).send("<h1>Link expired or invalid token.</h1>");
+        }
+
+        await prisma.user.update({
+            where: { id: user.id },
+            data: {
+                isConfirmed: true,
+                confirmationToken: null
+            }
+        });
+
+        res.redirect("https://wohi2-course-project-production-bbfa.up.railway.app/login?confirmed=true");
+    } catch (error) {
+        next(error);
+    }
 });
 
 module.exports = router;

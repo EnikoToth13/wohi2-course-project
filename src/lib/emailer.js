@@ -1,4 +1,4 @@
-export async function sendConfirmationEmail(userEmail, token) {
+async function sendConfirmationEmail(userEmail, token) {
     const confirmationLink = `${process.env.APP_URL}/api/auth/confirm?token=${token}`;
 
     const payload = {
@@ -33,3 +33,5 @@ export async function sendConfirmationEmail(userEmail, token) {
         throw error;
     }
 }
+
+module.exports = { sendConfirmationEmail };
