@@ -12,6 +12,8 @@ model User {
   email    String @unique @db.VarChar(255)
   password String @db.VarChar(255)
   name     String @db.VarChar(100)
+  isConfirmed Boolean @default(false)
+  confirmationToken String? @unique
   questions    Question[]
   attempts  Attempt[]
 

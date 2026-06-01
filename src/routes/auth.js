@@ -5,6 +5,8 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const { ValidationError, ConflictError, UnauthorizedError, ForbiddenError } = require('../lib/errors');
 const SECRET = process.env.JWT_SECRET;
+const crypto = require("crypto");
+const { sendConfirmationEmail } = require("../lib/emailer");
 
 //POST /api/auth/register
 router.post("/register", async(req, res) => {
@@ -23,17 +25,22 @@ router.post("/register", async(req, res) => {
     }
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    const confirmationToken = crypto.randomBytes(32).toString("hex");
+
     const user = await prisma.user.create({
         data: {
-            email, password: hashedPassword,name
+            email, 
+            password: hashedPassword,
+            name,
+            confirmationToken: confirmationToken,
+            isConfirmed: false
         }
     });
 
-    const token = jwt.sign({userId: user.id}, SECRET, {expiresIn: "1h"});
+    await sendConfirmationEmail(user.email, confirmationToken);
 
     res.status(201).json({
-        message: "User registered successfully",
-        token
+        message: "Email verification sent! Check your inbox."
     });
 })
 
@@ -59,10 +66,42 @@ router.post("/login", async(req, res) => {
         throw new ValidationError("Invalid credentials");
     }
 
+    if (!user.isConfirmed) {
+        return res.status(403).json({ 
+            message: "Your email address has not been confirmed yet. Please check your inbox." 
+        });
+    }
+
     //generate token
     const token = jwt.sign({userId: user.id}, SECRET, {expiresIn: "1h"});
 
     res.json({ token });
+});
+
+router.get("/confirm", async (req, res) => {
+    const { token } = req.query;
+
+    if (!token) {
+        return res.status(400).send("<h1>Invalid or missing token.</h1>");
+    }
+
+    const user = await prisma.user.findUnique({
+        where: { confirmationToken: token }
+    });
+
+    if (!user) {
+        return res.status(400).send("<h1>Link expired or invalid token.</h1>");
+    }
+
+    await prisma.user.update({
+        where: { id: user.id },
+        data: {
+            isConfirmed: true,
+            confirmationToken: null
+        }
+    });
+
+    res.redirect("https://wohi2-course-project-production-bbfa.up.railway.app/login?confirmed=true");
 });
 
 module.exports = router;
