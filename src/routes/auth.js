@@ -10,38 +10,43 @@ const { sendConfirmationEmail } = require("../lib/emailer");
 
 //POST /api/auth/register
 router.post("/register", async(req, res) => {
-    const { email, password, name } = req.body;
-    if (!email || !password || !name) {
-        throw new ValidationError("email, password and name are required");
-    }
-    
-    // Check if user already exists
-    const existingUser = await prisma.user.findUnique({ 
-        where: { email }
-    });
-
-    if (existingUser) {
-        throw new ConflictError("Email already registered");
-    }
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const confirmationToken = crypto.randomBytes(32).toString("hex");
-
-    const user = await prisma.user.create({
-        data: {
-            email, 
-            password: hashedPassword,
-            name,
-            confirmationToken: confirmationToken,
-            isConfirmed: false
+    try {
+        const { email, password, name } = req.body;
+        if (!email || !password || !name) {
+            throw new ValidationError("email, password and name are required");
         }
-    });
+        
+        // Check if user already exists
+        const existingUser = await prisma.user.findUnique({ 
+            where: { email }
+        });
 
-    await sendConfirmationEmail(user.email, confirmationToken);
+        if (existingUser) {
+            throw new ConflictError("Email already registered");
+        }
+        const hashedPassword = await bcrypt.hash(password, 10);
 
-    res.status(201).json({
-        message: "Email verification sent! Check your inbox."
-    });
+        const confirmationToken = crypto.randomBytes(32).toString("hex");
+
+        const user = await prisma.user.create({
+            data: {
+                email, 
+                password: hashedPassword,
+                name,
+                confirmationToken: confirmationToken,
+                isConfirmed: false
+            }
+        });
+
+        await sendConfirmationEmail(user.email, confirmationToken);
+
+        res.status(201).json({
+            message: "Email verification sent! Check your inbox."
+        });
+    } catch {
+        console.error("REGISTRATION ERROR DETECTED:", error);
+        next(error);
+    }
 })
 
 //POST /api/auth/login
