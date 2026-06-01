@@ -43,7 +43,7 @@ router.post("/register", async(req, res) => {
         res.status(201).json({
             message: "Email verification sent! Check your inbox."
         });
-    } catch {
+    } catch (error) {
         console.error("REGISTRATION ERROR DETECTED:", error);
         next(error);
     }
