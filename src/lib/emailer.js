@@ -1,35 +1,35 @@
-const nodemailer = require("nodemailer");
-
-const transporter = nodemailer.createTransport({
-    host: mail-eu.smtp2go.com,
-    port: 80,
-    secure: false,
-    auth: {
-        user: process.env.SMTP_USER,
-        password: process.env.SMTP_PASS,
-    },
-    connectionTimeout: 5000, 
-    greetingTimeout: 5000,   
-    timeout: 5000
-});
-
-async function sendConfirmationEmail(userEmail, token) {
+export async function sendConfirmationEmail(userEmail, token) {
     const confirmationLink = `${process.env.APP_URL}/api/auth/confirm?token=${token}`;
 
-    const mailOptions = {
-        from: process.env.EMAIL_FROM,
-        to: userEmail,
-        subject: "Confirm your Quiz Game Account",
-        html: `
-        <h1>Welcome to the Quiz Game!</h1>
-        <p>Please click the link below to confirm your email address and activate your account:</p>
-        <a href="${confirmationLink}" style="padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px;">Confirm Email</a>
-        <p>If the button doesn't work, copy and paste this link into your browser:</p>
-        <p>${confirmationLink}</p>
-        `,
+    const payload = {
+        api_key: process.env.SMTP_PASS, // Put your new SMTP2GO API Key here
+        to: [userEmail],
+        sender: "test@smtp2go.com",     // Using the fallback sender domain
+        subject: "Confirm your Quiz Game Account!",
+        html_body: `<h1>Welcome to the Quiz Game!</h1>
+                    <p>Please click the link below to verify your email address:</p>
+                    <a href="${confirmationLink}">Confirm Email Account</a>`
     };
 
-    await transporter.sendMail(mailOptions);
-}
+    try {
+        const response = await fetch("https://api.smtp2go.com/v3/email/send", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+        });
 
-module.exports = { sendConfirmationEmail };
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.data?.error || "Failed to send email via API");
+        }
+
+        console.log("Email API call successful:", data);
+        return data;
+    } catch (error) {
+        console.error("SMTP2GO API ERROR:", error.message);
+        throw error;
+    }
+}
