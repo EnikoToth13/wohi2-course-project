@@ -2,20 +2,20 @@ async function sendConfirmationEmail(userEmail, token) {
     const confirmationLink = `${process.env.APP_URL}/api/auth/confirm?token=${token}`;
 
     const payload = {
-        api_key: process.env.SMTP_PASS, // Put your new SMTP2GO API Key here
+        from: "Quiz Game <onboarding@resend.dev>",
         to: [userEmail],
-        sender: "test@smtp2go.com",     // Using the fallback sender domain
         subject: "Confirm your Quiz Game Account!",
-        html_body: `<h1>Welcome to the Quiz Game!</h1>
-                    <p>Please click the link below to verify your email address:</p>
-                    <a href="${confirmationLink}">Confirm Email Account</a>`
+        html: `<h1>Welcome to the Quiz Game!</h1>
+               <p>Please click the link below to verify your email address:</p>
+               <a href="${confirmationLink}">Confirm Email Account</a>`
     };
 
     try {
-        const response = await fetch("https://api.smtp2go.com/v3/email/send", {
+        const response = await fetch("https://api.resend.com/emails", {
             method: "POST",
             headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${process.env.RESEND_API_KEY}`
             },
             body: JSON.stringify(payload)
         });
@@ -23,13 +23,13 @@ async function sendConfirmationEmail(userEmail, token) {
         const data = await response.json();
 
         if (!response.ok) {
-            throw new Error(data.data?.error || "Failed to send email via API");
+            throw new Error(data.message || "Failed to send email via Resend");
         }
 
-        console.log("Email API call successful:", data);
+        console.log("Resend Email API call successful:", data);
         return data;
     } catch (error) {
-        console.error("SMTP2GO API ERROR:", error.message);
+        console.error("RESEND API ERROR:", error.message);
         throw error;
     }
 }
