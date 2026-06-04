@@ -13,6 +13,7 @@ const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const QuestionInput = z.object({
     question: z.string().min(1),
     answer: z.string().min(1),
+    difficulty: z.enum(["EASY", "MEDIUM", "HARD"]).default("MEDIUM"),
     keywords: z.union([z.string(), z.array(z.string())]).optional()
 });
 
@@ -79,13 +80,14 @@ fileFilter: (req, file, cb) => {
   else cb(new ValidationError("Only image files are allowed"));
 }
 
-// GET /api/questions/, /api/questions?keyword=http&page=1&limit=5
+// GET /api/questions/, /api/questions?keyword=http&page=1&limit=5, /api/questions?difficulty=EASY
 // List all questions
 router.get("/", async (req, res) => {
-    const {keyword} = req.query;
+    const {keyword, difficulty} = req.query;
 
-    const where = keyword ? 
-    { keywords: { some: { name: keyword } } } : {};
+    const where = {};
+    if (keyword) where.keywords = { some: { name: keyword } };
+    if (difficulty) where.difficulty = difficulty.toUpperCase();
 
     const page = Math.max(1, parseInt(req.query.page) || 1);
     const limit = Math.max(1, Math.min(100, parseInt(req.query.limit) || 5));
@@ -135,13 +137,13 @@ router.get("/:qId", async (req, res) => {
 // POST /api/questions
 router.post("/", upload.single("image"), async (req, res) => {
 
-    const {question, answer, keywords} = QuestionInput.parse(req.body);
+    const {question, answer, keywords, difficulty} = QuestionInput.parse(req.body);
 
     const keywordsArray = parseKeywords(keywords);
     const imageUrl = req.file ? req.file.path : null;
     const newQuestion = await prisma.question.create({
     data: {
-      question, answer, imageUrl,
+      question, answer, imageUrl, difficulty,
       userId: req.user.userId,
       keywords: {
         connectOrCreate: keywordsArray.map((kw) => ({
@@ -157,7 +159,7 @@ router.post("/", upload.single("image"), async (req, res) => {
 router.put("/:qId", isOwner, upload.single("image"), async (req, res) => {
     const qId = Number(req.params.qId);
     const questionId =  await prisma.question.findUnique({ where: { id: qId } });
-    const {question, answer, keywords} = QuestionInput.parse(req.body);
+    const {question, answer, keywords, difficulty} = QuestionInput.parse(req.body);
 
     /*const question = await prisma.question.findUnique({
         where: { id: qId },
@@ -177,7 +179,7 @@ router.put("/:qId", isOwner, upload.single("image"), async (req, res) => {
     const updatedQuestion = await prisma.question.update({
         where: { id: qId },
         data: {
-            question, answer, imageUrl,
+            question, answer, imageUrl, difficulty,
             keywords: {
                 set: [],
                 connectOrCreate: keywordsArray.map((kw) => ({

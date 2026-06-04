@@ -111,6 +111,9 @@ async function showApp() {
   document.getElementById("auth-section").style.display = "none";
   document.getElementById("app-section").style.display = "block";
   document.getElementById("logout-btn").style.display = "inline-block";
+  document.getElementById("global-search-btn").addEventListener("click", () => {
+    loadQuestions();
+  });
   await loadQuestions();
 }
 
@@ -118,8 +121,10 @@ async function loadQuestions(keyword = "", page = 1) {
   const container = document.getElementById("questions-container");
   container.innerHTML = '<p class="loading">Loading questions...</p>';
 
+  const difficulty = document.getElementById('difficultyFilter').value;
+
   try {
-    const params = new URLSearchParams({ page, limit: CONFIG.QUESTIONS_PER_PAGE });
+    const params = new URLSearchParams({ page, limit: CONFIG.QUESTIONS_PER_PAGE, difficulty: difficulty });
     if (keyword) params.set("keyword", keyword);
     const result = await apiFetch(`${CONFIG.ROUTES.QUESTIONS}?${params}`);
     const { data: questions, total, totalPages } = result;

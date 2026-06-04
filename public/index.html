@@ -604,6 +604,18 @@
     <section id="auth-section" style="display: none"></section>
 
     <section id="app-section" style="display: none">
+      <div class="toolbar">
+        <div class="search-bar">
+          <input type="text" id="searchInput" placeholder="Search keywords...">
+          <select id="difficultyFilter">
+            <option value="">All Difficulties</option>
+            <option value="EASY">Easy</option>
+            <option value="MEDIUM">Medium</option>
+            <option value="HARD">Hard</option>
+          </select>
+          <button class="btn btn-search" id="global-search-btn">Search</button>
+        </div>
+      </div>
       <div id="questions-container"></div>
     </section>
   </main>

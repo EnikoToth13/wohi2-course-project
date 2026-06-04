@@ -90,7 +90,7 @@ router.post("/login", async(req, res, next) => {
     }
 });
 
-router.get("/confirm", async (req, res) => {
+router.get("/confirm", async (req, res, next) => {
     try {
         const { token } = req.query;
 

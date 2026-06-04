@@ -21,7 +21,10 @@ function errorHandler(err, req, res, next) {
     }
 
     req.log?.error({ err }, "unhandled error");
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ 
+        message: "Internal server error",
+        error: err.message
+     });
 }
 
 module.exports = errorHandler;

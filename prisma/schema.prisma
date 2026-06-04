@@ -7,47 +7,54 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
 model User {
-  id       Int    @id @default(autoincrement())
-  email    String @unique @db.VarChar(255)
-  password String @db.VarChar(255)
-  name     String @db.VarChar(100)
-  isConfirmed Boolean @default(false)
-  confirmationToken String? @unique
-  questions    Question[]
-  attempts  Attempt[]
+  id                Int        @id @default(autoincrement())
+  email             String     @unique @db.VarChar(255)
+  password          String     @db.VarChar(255)
+  name              String     @db.VarChar(100)
+  isConfirmed       Boolean    @default(false)
+  confirmationToken String?    @unique
+  questions         Question[]
+  attempts          Attempt[]
 
   @@map("users")
 }
 
 model Question {
-  id       Int       @id @default(autoincrement())
-  question    String    @db.VarChar(255)
-  answer    String    @db.VarChar(255)
-  keywords Keyword[]
-  imageUrl  String? @db.VarChar(255)
-  userId   Int
-  user     User @relation(fields: [userId], references: [id])
-  attempts  Attempt[]
+  id         Int        @id @default(autoincrement())
+  question   String     @db.VarChar(255)
+  answer     String     @db.VarChar(255)
+  keywords   Keyword[]
+  imageUrl   String?    @db.VarChar(255)
+  userId     Int
+  user       User       @relation(fields: [userId], references: [id])
+  attempts   Attempt[]
+  difficulty Difficulty @default(MEDIUM)
 
   @@map("questions")
 }
 
 model Keyword {
-  id    Int    @id @default(autoincrement())
-  name  String @unique @db.VarChar(100)
+  id        Int        @id @default(autoincrement())
+  name      String     @unique @db.VarChar(100)
   questions Question[]
 
   @@map("keywords")
 }
 
 model Attempt {
-  id       Int    @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  userId  Int
-  user     User @relation(fields: [userId], references: [id])
+  id         Int      @id @default(autoincrement())
+  createdAt  DateTime @default(now())
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id])
   questionId Int
-  questions    Question @relation(fields: [questionId], references: [id])
+  questions  Question @relation(fields: [questionId], references: [id])
 
   @@unique([userId, questionId])
   @@map("attempts")
