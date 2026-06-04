@@ -294,7 +294,7 @@ async function loadQuestionDetail(qId) {
 async function showQuestionForm(qId) {
   const container = document.getElementById("questions-container");
   const isEdit = !!qId;
-  let q = { question: "", answer: "", keywords: [] };
+  let q = { question: "", answer: "", keywords: [], difficulty: "MEDIUM" };
 
   if (isEdit) {
     try {
@@ -313,6 +313,14 @@ async function showQuestionForm(qId) {
         <div class="form-group">
           <label for="q-question">Question</label>
           <input type="text" id="q-question" value="${q.question}" required />
+        </div>
+        <div class="form-group">
+          <label for="q-difficulty">Difficulty</label>
+          <select id="q-difficulty" required>
+            <option value="EASY" ${q.difficulty === "EASY" ? "selected" : ""}>Easy</option>
+            <option value="MEDIUM" ${q.difficulty === "MEDIUM" ? "selected" : ""}>Medium</option>
+            <option value="HARD" ${q.difficulty === "HARD" ? "selected" : ""}>Hard</option>
+          </select>
         </div>
         <div class="form-group">
           <label for="q-answer">Answer</label>
@@ -345,6 +353,7 @@ async function showQuestionForm(qId) {
     const body = new FormData();
     body.append("question", document.getElementById("q-question").value);
     body.append("answer", document.getElementById("q-answer").value);
+    body.append("difficulty", document.getElementById("q-difficulty").value);
     body.append("keywords", document.getElementById("q-keywords").value);
     const imageFile = document.getElementById("q-image").files[0];
     if (imageFile) body.append("image", imageFile);
